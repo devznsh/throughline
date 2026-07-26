@@ -1,0 +1,21 @@
+node_modules/
+dist/
+dist-bundle/
+build/
+coverage/
+*.tsbuildinfo
+.DS_Store
+
+# Local index + caches produced by the connector itself
+.project-context/
+*.mcpb
+
+# Never commit local overrides or secrets
+connector.config.json
+.env
+.env.*
+
+# Release artefacts and downloaded tooling
+mcp-publisher  # registry CLI binary, downloaded not vendored
+mcp-publisher.exe
+mcp-publisher.tar.gz

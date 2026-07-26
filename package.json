@@ -1,0 +1,90 @@
+{
+  "name": "throughline",
+  "version": "1.0.1",
+  "description": "Give Claude complete understanding of your software project. A local-first MCP server that builds a semantic index of a repository and exposes it as navigation, search, tracing and documentation tools.",
+  "license": "MIT",
+  "type": "module",
+  "private": false,
+  "engines": {
+    "node": ">=20.11.0"
+  },
+  "packageManager": "pnpm@9.12.3",
+  "main": "./dist/main.js",
+  "bin": {
+    "throughline": "./dist/main.js"
+  },
+  "exports": {
+    ".": "./dist/main.js"
+  },
+  "files": [
+    "dist",
+    "grammars",
+    "manifest.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json && node scripts/copy-assets.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "dev": "tsx watch src/main.ts",
+    "lint": "eslint . --max-warnings 0",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "bench": "vitest bench --run",
+    "verify": "npm run format:check && npm run lint && npm run typecheck && npm run test:coverage && npm run compliance",
+    "bundle": "node scripts/bundle.mjs",
+    "mcpb:validate": "mcpb validate manifest.json",
+    "mcpb:pack": "npm run compliance && npm run bundle && mcpb pack dist-bundle throughline.mcpb",
+    "grammars": "node scripts/fetch-grammars.mjs",
+    "repo:set": "node scripts/set-repository.mjs",
+    "repo:check": "node scripts/set-repository.mjs --check",
+    "smoke": "node scripts/smoke.mjs",
+    "compliance": "node scripts/check-compliance.mjs",
+    "registry:prepare": "node scripts/prepare-registry.mjs",
+    "rename": "node scripts/rename-project.mjs",
+    "version:set": "node scripts/set-version.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.13.0",
+    "better-sqlite3": "^11.5.0",
+    "chokidar": "^4.0.1",
+    "ignore": "^6.0.2",
+    "isomorphic-git": "^1.27.1",
+    "node-sqlite3-wasm": "^0.8.30",
+    "picomatch": "^4.0.2",
+    "tree-sitter-wasms": "^0.1.12",
+    "web-tree-sitter": "^0.24.3",
+    "yaml": "^2.6.0",
+    "zod": "^3.25.76",
+    "zod-to-json-schema": "^3.24.5"
+  },
+  "devDependencies": {
+    "@anthropic-ai/mcpb": "^1.1.0",
+    "@eslint/js": "^9.15.0",
+    "@types/better-sqlite3": "^7.6.11",
+    "@types/node": "^22.9.0",
+    "@types/picomatch": "^3.0.1",
+    "@vitest/coverage-v8": "^2.1.5",
+    "eslint": "^9.15.0",
+    "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.3.3",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3",
+    "typescript-eslint": "^8.15.0",
+    "vitest": "^2.1.5"
+  },
+  "keywords": [
+    "mcp",
+    "claude",
+    "connector",
+    "code-search",
+    "code-navigation",
+    "static-analysis",
+    "tree-sitter",
+    "developer-tools"
+  ]
+}

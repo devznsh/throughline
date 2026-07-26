@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Project Context Connector">
+  <title>Project Context Connector</title>
+  <!--
+    Source lines resolving into a graph: flat text on the left becomes structure
+    on the right, with one node picked out as the resolved match. Deliberately
+    only five shapes, so the mark survives being rendered at 32 pixels.
+  -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#222E5E"/>
+      <stop offset="100%" stop-color="#0B1024"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="512" height="512" rx="114" fill="url(#bg)"/>
+
+  <!-- the graph the indexer builds -->
+  <g stroke="#38BDF8" stroke-opacity="0.65" stroke-width="11" stroke-linecap="round">
+    <line x1="366" y1="142" x2="432" y2="256"/>
+    <line x1="432" y1="256" x2="366" y2="370"/>
+  </g>
+
+  <!-- unresolved source lines -->
+  <g fill="#94A3B8">
+    <rect x="84" y="143" width="124" height="34" rx="17"/>
+    <rect x="84" y="239" width="156" height="34" rx="17"/>
+    <rect x="84" y="335" width="104" height="34" rx="17"/>
+  </g>
+
+  <!-- resolved symbols; the centre node is the cited match -->
+  <circle cx="366" cy="142" r="34" fill="#38BDF8"/>
+  <circle cx="432" cy="256" r="44" fill="#F1F5F9"/>
+  <circle cx="366" cy="370" r="34" fill="#38BDF8"/>
+</svg>

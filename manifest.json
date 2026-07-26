@@ -1,0 +1,196 @@
+{
+  "manifest_version": "0.3",
+  "name": "throughline",
+  "display_name": "Throughline",
+  "version": "1.0.1",
+  "description": "Give Claude complete understanding of your software project.",
+  "long_description": "Throughline indexes a local repository — files, symbols, imports, call graph, git history and documentation — and exposes it to Claude as a set of precise retrieval tools. Ask conceptual questions (\"where is rate limiting handled?\"), trace execution paths, find every caller before a rename, review repository health, or generate architecture and onboarding documentation grounded in the actual code. Everything runs on your machine: source code is read locally, indexed into a local SQLite database inside your project, and never uploaded anywhere by this extension.",
+  "author": {
+    "name": "Devansh Gaur",
+    "email": "devansh22435@gmail.com",
+    "url": "https://github.com/devznsh"
+  },
+  "homepage": "https://github.com/devznsh/throughline",
+  "documentation": "https://github.com/devznsh/throughline/blob/main/README.md",
+  "support": "https://github.com/devznsh/throughline/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/devznsh/throughline"
+  },
+  "license": "MIT",
+  "icon": "assets/icon.png",
+  "privacy_policies": [
+    "https://github.com/devznsh/throughline/blob/main/docs/PRIVACY.md"
+  ],
+  "keywords": [
+    "code",
+    "codebase",
+    "repository",
+    "search",
+    "architecture",
+    "documentation",
+    "developer-tools"
+  ],
+  "server": {
+    "type": "node",
+    "entry_point": "dist/main.js",
+    "mcp_config": {
+      "command": "node",
+      "args": [
+        "${__dirname}/dist/main.js",
+        "--root",
+        "${user_config.workspace_roots}"
+      ],
+      "env": {
+        "PROJECT_CONTEXT_LOG_LEVEL": "${user_config.log_level}",
+        "PROJECT_CONTEXT_ALLOW_WRITES": "${user_config.allow_writes}",
+        "PROJECT_CONTEXT_MAX_FILES": "${user_config.max_files}"
+      }
+    }
+  },
+  "user_config": {
+    "workspace_roots": {
+      "type": "directory",
+      "title": "Project directories",
+      "description": "Directories this connector may read. Choosing a directory here is what grants access; nothing outside these paths is ever read.",
+      "multiple": true,
+      "required": true
+    },
+    "allow_writes": {
+      "type": "boolean",
+      "title": "Allow writing generated documentation",
+      "description": "When off, the connector can only read. When on, write_documentation can save a generated file — and still requires explicit confirmation on every write.",
+      "default": false,
+      "required": false
+    },
+    "max_files": {
+      "type": "number",
+      "title": "Maximum files to index",
+      "description": "Safety limit for very large directories. Indexing stops here and tells you the index is incomplete.",
+      "default": 50000,
+      "min": 100,
+      "max": 500000,
+      "required": false
+    },
+    "log_level": {
+      "type": "string",
+      "title": "Log level",
+      "description": "Diagnostic verbosity on stderr. Use debug when reporting a problem.",
+      "default": "info",
+      "required": false
+    }
+  },
+  "tools_generated": false,
+  "tools": [
+    {
+      "name": "list_workspaces",
+      "description": "Lists the workspace directories this connector may read, and whether each has been indexed. Resolves which project is meant when several are granted."
+    },
+    {
+      "name": "scan_repository",
+      "description": "Builds or rebuilds the searchable index for a workspace: files, symbols, imports, call edges, git history and documentation."
+    },
+    {
+      "name": "refresh_index",
+      "description": "Updates the index for files that changed since the last run. Much faster than scan_repository. Use this when the user has edited code during the conversation."
+    },
+    {
+      "name": "search_code",
+      "description": "Finds code by meaning as well as by name."
+    },
+    {
+      "name": "find_symbol",
+      "description": "Locates a definition by name. Use when the user names a specific function, class, type or constant. Faster and more precise than search_code for exact identifiers."
+    },
+    {
+      "name": "find_references",
+      "description": "Lists everywhere a symbol is called or referenced, with call sites. Use before renaming or deleting anything, and to understand how a function is actually used."
+    },
+    {
+      "name": "explain_file",
+      "description": "Summarises one file: what it defines, what it imports, what imports it, and its recent change history. Use when the user asks what a file does or opens an unfamiliar one."
+    },
+    {
+      "name": "explain_symbol",
+      "description": "Gives full context for one symbol: signature, documentation, what it calls, what calls it, and where it sits in the architecture."
+    },
+    {
+      "name": "trace_execution",
+      "description": "Traces the call path between two symbols, or outward from one. Use for \"what happens when a request hits this endpoint\" and for understanding how a value reaches a destination."
+    },
+    {
+      "name": "project_overview",
+      "description": "High-level orientation for a codebase: size, languages, frameworks, entry points, layer structure and key documentation."
+    },
+    {
+      "name": "dependency_graph",
+      "description": "Renders the import graph as Mermaid, either for the whole workspace or around one file. Aggregates to directories when the file count is too large to read."
+    },
+    {
+      "name": "architecture_diagram",
+      "description": "Produces a Mermaid diagram of the codebase: layer view, folder tree or change hotspots. Use to give the user a visual anchor when explaining structure."
+    },
+    {
+      "name": "list_entry_points",
+      "description": "Lists where execution starts: HTTP routes, CLI commands, background workers, scheduled jobs and main functions. Use to answer \"how does anything get called here?\"."
+    },
+    {
+      "name": "recent_changes",
+      "description": "Summarises recent commit activity: what changed, who changed it, and which files are churning. Use to catch up on a project or to find who to ask about an area."
+    },
+    {
+      "name": "repository_health",
+      "description": "Reports possible dead code, unused dependencies, import cycles, complexity spikes, untested modules and unresolved imports."
+    },
+    {
+      "name": "find_dead_code",
+      "description": "Lists non-exported symbols with no resolved references — candidates for deletion."
+    },
+    {
+      "name": "draft_documentation",
+      "description": "Assembles a documentation draft — README, architecture overview or onboarding guide — from the index and returns it as text. Never touches the filesystem."
+    },
+    {
+      "name": "write_documentation",
+      "description": "Writes a generated documentation file into the workspace, overwriting any existing file at that path. Writes the same content draft_documentation returns."
+    }
+  ],
+  "prompts": [
+    {
+      "name": "orient_me",
+      "description": "Get oriented in an unfamiliar codebase.",
+      "arguments": [
+        "workspace"
+      ],
+      "text": "Index the workspace ${arguments.workspace} if it isn't already, then give me an orientation: what this project does, its stack, where execution starts, how it's laid out, and the three files I should read first. Cite file paths and line numbers for every claim."
+    },
+    {
+      "name": "find_feature",
+      "description": "Locate where a feature is implemented.",
+      "arguments": [
+        "workspace",
+        "feature"
+      ],
+      "text": "In ${arguments.workspace}, find where ${arguments.feature} is implemented. Search semantically, then trace from the entry point to the core logic and show me the call path with citations."
+    },
+    {
+      "name": "safe_to_change",
+      "description": "Assess the blast radius of changing a symbol.",
+      "arguments": [
+        "workspace",
+        "symbol"
+      ],
+      "text": "In ${arguments.workspace}, I want to change ${arguments.symbol}. Show me every caller, flag which references were resolved heuristically rather than exactly, and tell me what could break."
+    }
+  ],
+  "compatibility": {
+    "claude_desktop": ">=0.10.0",
+    "platforms": [
+      "darwin",
+      "win32"
+    ],
+    "runtimes": {
+      "node": ">=20.0.0"
+    }
+  }
+}
