@@ -1,0 +1,6 @@
+{
+  "name": "sample-app",
+  "version": "0.1.0",
+  "dependencies": { "express": "^4.19.0", "jsonwebtoken": "^9.0.2", "unused-package": "^1.0.0" },
+  "devDependencies": { "vitest": "^2.0.0" }
+}

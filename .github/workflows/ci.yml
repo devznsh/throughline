@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    name: test (${{ matrix.os }}, node ${{ matrix.node }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # macOS and Linux are here for a specific reason: the symlink-escape test
+        # skips on Windows, where creating a symlink needs elevated privileges.
+        # Without a non-Windows runner that security check never actually runs.
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node: ['22']
+        include:
+          # Guards the floor the manifest promises. ESLint needs a newer Node, so
+          # this job builds and tests without linting.
+          - os: ubuntu-latest
+            node: '20.19'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      # No lockfile is committed, so `npm ci` cannot be used.
+      - run: npm install --engine-strict=false
+
+      - run: npm run grammars
+      - run: npm run build
+      - run: npm test
+      - run: npm run compliance
+
+      - name: Lint
+        # ESLint's own dependencies require Node 20.19+; the connector itself
+        # runs on 20.11+, so linting is skipped on the floor job.
+        if: matrix.node == '22'
+        run: npm run lint

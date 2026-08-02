@@ -1,0 +1,22 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.devznsh/throughline",
+  "title": "Throughline",
+  "description": "Give Claude complete understanding of your software project.",
+  "version": "1.0.1",
+  "repository": {
+    "url": "https://github.com/devznsh/throughline",
+    "source": "github"
+  },
+  "websiteUrl": "https://github.com/devznsh/throughline",
+  "packages": [
+    {
+      "registryType": "mcpb",
+      "identifier": "https://github.com/devznsh/throughline/releases/download/v1.0.1/throughline.mcpb",
+      "fileSha256": "9b4658368d21f722504a64f54c7c9f6f20f9c624bcf68057cc6cec8ebf5e7136",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

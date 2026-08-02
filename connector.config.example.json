@@ -1,0 +1,53 @@
+{
+  "$schema": "./docs/connector.config.schema.json",
+
+  "workspace": {
+    "respectGitignore": true,
+    "followSymlinks": false,
+    "maxFileSizeBytes": 2000000,
+    "exclude": ["**/node_modules/**", "**/dist/**", "**/.git/**", "**/coverage/**"]
+  },
+
+  "languages": {
+    "enabled": ["typescript", "tsx", "javascript", "python", "go", "sql", "markdown", "yaml"]
+  },
+
+  "index": {
+    "incremental": true,
+    "watch": false,
+    "parallelism": null,
+    "databasePath": null
+  },
+
+  "search": {
+    "mode": "lexical",
+    "defaultLimit": 12,
+    "maxSnippetLines": 40,
+    "embeddings": {
+      "enabled": false,
+      "modelPath": null
+    }
+  },
+
+  "git": {
+    "enabled": true,
+    "maxCommits": 5000
+  },
+
+  "security": {
+    "redactSecrets": true,
+    "allowShellCommands": false,
+    "allowNetwork": false,
+    "allowWrites": false
+  },
+
+  "output": {
+    "maxResponseBytes": 48000,
+    "includeCitations": true
+  },
+
+  "logging": {
+    "level": "info",
+    "destination": "stderr"
+  }
+}

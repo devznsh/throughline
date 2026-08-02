@@ -1,0 +1,8 @@
+dist
+dist-bundle
+build
+coverage
+node_modules
+grammars
+tests/fixtures
+pnpm-lock.yaml
