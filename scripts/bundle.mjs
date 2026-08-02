@@ -136,57 +136,94 @@ async function selfTest(bundleDir) {
   const workspace = await mkdtemp(path.join(tmpdir(), 'throughline-selftest-'));
   const entry = path.join(bundleDir, 'dist', 'main.js');
 
-  return new Promise((resolve) => {
-    const child = spawn(process.execPath, [entry, '--root', workspace], {
-      stdio: ['pipe', 'pipe', 'pipe'],
-    });
+  const child = spawn(process.execPath, [entry, '--root', workspace], {
+    stdio: ['pipe', 'pipe', 'pipe'],
+  });
 
-    let stdout = '';
-    let stderr = '';
+  let stderr = '';
+  let exited = false;
+  child.on('exit', () => {
+    exited = true;
+  });
+  child.stderr.on('data', (chunk) => {
+    stderr += String(chunk);
+  });
+
+  /**
+   * Removes the scratch workspace once the server has really gone.
+   *
+   * Killing the process is not enough on Windows: SQLite keeps `-shm` and `-wal`
+   * handles open until the process actually exits, and unlinking them before
+   * then fails with EBUSY. Deleting the directory is also pure housekeeping, so
+   * a failure here must never fail the build — an earlier version fired the
+   * removal without awaiting it and the rejection crashed the packer *after* the
+   * handshake had already succeeded.
+   */
+  async function cleanup() {
+    child.kill();
+    const deadline = Date.now() + 5_000;
+    while (!exited && Date.now() < deadline) {
+      await new Promise((r) => setTimeout(r, 50));
+    }
+    try {
+      await rm(workspace, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
+    } catch {
+      // A leftover temp directory is not worth failing a release over.
+    }
+  }
+
+  const outcome = await new Promise((resolve) => {
+    let buffer = '';
     let settled = false;
 
-    const finish = (ok, detail) => {
+    const settle = (ok, detail) => {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
-      child.kill();
-      void rm(workspace, { recursive: true, force: true });
-      resolve({ ok, detail, stderr });
+      resolve({ ok, detail });
     };
 
-    const timer = setTimeout(() => finish(false, 'no response to initialize within 25s'), 25_000);
+    const timer = setTimeout(() => settle(false, 'no response to initialize within 25s'), 25_000);
 
     child.stdout.on('data', (chunk) => {
-      stdout += String(chunk);
-      for (const line of stdout.split('\n')) {
-        if (line.trim().length === 0) continue;
-        try {
-          const message = JSON.parse(line);
-          if (message.id === 0 && message.result !== undefined) {
-            finish(true, `handshake ok (${message.result.serverInfo?.name ?? 'unknown'})`);
+      buffer += String(chunk);
+      let index = buffer.indexOf('\n');
+      while (index !== -1) {
+        const line = buffer.slice(0, index).trim();
+        buffer = buffer.slice(index + 1);
+        if (line.length > 0) {
+          try {
+            const message = JSON.parse(line);
+            if (message.id === 0 && message.result !== undefined) {
+              settle(true, `handshake ok (${message.result.serverInfo?.name ?? 'unknown'})`);
+            }
+          } catch {
+            // Not a complete JSON message; keep reading.
           }
-        } catch {
-          // Partial line; wait for the rest.
         }
+        index = buffer.indexOf('\n');
       }
     });
 
-    child.stderr.on('data', (chunk) => {
-      stderr += String(chunk);
-    });
-
-    child.on('error', (error) => finish(false, `could not spawn: ${error.message}`));
-    child.on('exit', (code) => finish(false, `exited early with code ${String(code)}`));
+    child.on('error', (error) => settle(false, `could not spawn: ${error.message}`));
+    child.on('exit', (code) => settle(false, `exited early with code ${String(code)}`));
 
     child.stdin.write(
       `${JSON.stringify({
         jsonrpc: '2.0',
         id: 0,
         method: 'initialize',
-        params: { protocolVersion: '2024-11-05', capabilities: {}, clientInfo: { name: 'bundle-selftest', version: '1' } },
+        params: {
+          protocolVersion: '2024-11-05',
+          capabilities: {},
+          clientInfo: { name: 'bundle-selftest', version: '1' },
+        },
       })}\n`,
     );
   });
+
+  await cleanup();
+  return { ...outcome, stderr };
 }
 
 async function main() {
@@ -221,10 +258,35 @@ async function main() {
     process.exit(1);
   }
 
+  /*
+   * Files no runtime needs.
+   *
+   * Deliberately narrow, and narrower than it first was. An earlier version also
+   * skipped directories named `doc`, `test`, `example` and similar — which broke
+   * the bundle outright, because `yaml` keeps its document model in `dist/doc/`
+   * and `require('../doc/directives.js')` then failed at load. Directory names
+   * carry no reliable meaning: package authors use them for ordinary code.
+   *
+   * So only two things are excluded, both of which are unambiguous by extension
+   * or by being tooling configuration that no module can import: documentation
+   * files and source maps. The saving is smaller, and it is correct.
+   */
+  const SKIP_DIRS = new Set(['.github', '.vscode', '.idea', '.circleci']);
+  const SKIP_FILE = /\.(?:md|markdown|map)$/i;
+
   for (const source of packages) {
     // Preserve the path relative to the project so nested installs stay nested.
     const relative = path.relative(root, source);
-    await cp(source, path.join(out, relative), { recursive: true, dereference: true });
+    await cp(source, path.join(out, relative), {
+      recursive: true,
+      dereference: true,
+      filter: (from) => {
+        const name = path.basename(from);
+        if (SKIP_DIRS.has(name.toLowerCase())) return false;
+        if (SKIP_FILE.test(name)) return false;
+        return true;
+      },
+    });
   }
   console.log(`  ${packages.length} production packages included (full dependency closure)`);
 

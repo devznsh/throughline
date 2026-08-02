@@ -31,6 +31,20 @@ Initial release.
 
 ### Fixed
 
+- The bundle self-test crashed the packer *after* a successful handshake. It
+  killed the child process and immediately removed the temporary workspace, but
+  on Windows SQLite holds `-shm` and `-wal` handles until the process has really
+  exited, so the unlink failed with EBUSY — and the removal was fired without
+  being awaited, making it an unhandled rejection. It now waits for the process
+  to exit and treats cleanup as best-effort, because a leftover temp directory
+  is not worth failing a release over.
+- Bundles no longer carry documentation files or source maps from their
+  dependencies. An initial attempt at this also excluded directories named
+  `doc`, `test` and `example`, which broke the bundle: `yaml` keeps its document
+  model in `dist/doc/`. Directory names carry no reliable meaning, so only file
+  extensions and unimportable tooling directories are excluded now. The build's
+  self-test caught it before anything shipped.
+
 - The packaged extension could not start. `scripts/bundle.mjs` copied a
   hand-written list of 14 top-level packages and none of their dependencies —
   `isomorphic-git` alone needs about a dozen — so the bundled server failed at
