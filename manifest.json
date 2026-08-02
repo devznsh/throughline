@@ -155,34 +155,6 @@
       "description": "Writes a generated documentation file into the workspace, overwriting any existing file at that path. Writes the same content draft_documentation returns."
     }
   ],
-  "prompts": [
-    {
-      "name": "orient_me",
-      "description": "Get oriented in an unfamiliar codebase.",
-      "arguments": [
-        "workspace"
-      ],
-      "text": "Index the workspace ${arguments.workspace} if it isn't already, then give me an orientation: what this project does, its stack, where execution starts, how it's laid out, and the three files I should read first. Cite file paths and line numbers for every claim."
-    },
-    {
-      "name": "find_feature",
-      "description": "Locate where a feature is implemented.",
-      "arguments": [
-        "workspace",
-        "feature"
-      ],
-      "text": "In ${arguments.workspace}, find where ${arguments.feature} is implemented. Search semantically, then trace from the entry point to the core logic and show me the call path with citations."
-    },
-    {
-      "name": "safe_to_change",
-      "description": "Assess the blast radius of changing a symbol.",
-      "arguments": [
-        "workspace",
-        "symbol"
-      ],
-      "text": "In ${arguments.workspace}, I want to change ${arguments.symbol}. Show me every caller, flag which references were resolved heuristically rather than exactly, and tell me what could break."
-    }
-  ],
   "compatibility": {
     "claude_desktop": ">=0.10.0",
     "platforms": [

@@ -31,6 +31,18 @@ Initial release.
 
 ### Fixed
 
+- The manifest advertised three prompts (`orient_me`, `find_feature`,
+  `safe_to_change`) that the server never implemented — it declares only the
+  `tools` capability and registers no prompt handler, so `prompts/list` would
+  have failed. Removed, and the compliance check now refuses to let a manifest
+  advertise prompts unless `src/main.ts` actually serves them.
+- The manifest's `tools` array carried only names and descriptions. That
+  satisfies the MCPB specification but not consumers validating against the MCP
+  `Tool` shape, where `inputSchema` is required — Smithery rejects such a bundle
+  with one error per tool. `npm run build` now regenerates the array from the
+  same Zod schemas the server serves at runtime, so the manifest cannot drift
+  from the code.
+
 - An index that could not be opened killed the server permanently. Because the
   failure happened during startup, before any tool could run, the user saw only
   "the server disconnected" with no way to recover short of finding and deleting

@@ -154,6 +154,16 @@ check('manifest author has a name', typeof manifest.author?.name === 'string');
 check('manifest declares an entry point', typeof manifest.server?.entry_point === 'string');
 check('manifest declares mcp_config', manifest.server?.mcp_config !== undefined);
 check(
+  'every manifest tool declares an inputSchema',
+  (manifest.tools ?? []).every((t) => typeof t.inputSchema === 'object' && t.inputSchema !== null),
+  'run `npm run manifest:sync` — consumers that validate against the MCP Tool shape reject tools without one',
+);
+check(
+  'no prompts are advertised that the server does not serve',
+  (manifest.prompts ?? []).length === 0 || /ListPromptsRequestSchema/.test(read('src/main.ts')),
+  'the manifest declares prompts but src/main.ts registers no prompt handler',
+);
+check(
   'manifest tools array matches the code exactly',
   JSON.stringify((manifest.tools ?? []).map((t) => t.name).sort()) ===
     JSON.stringify(tools.map((t) => t.name).sort()),

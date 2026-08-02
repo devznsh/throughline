@@ -24,7 +24,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.build.json && node scripts/copy-assets.mjs",
+    "build": "tsc -p tsconfig.build.json && node scripts/copy-assets.mjs && node scripts/sync-manifest.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "dev": "tsx watch src/main.ts",
     "lint": "eslint . --max-warnings 0",
@@ -46,7 +46,8 @@
     "compliance": "node scripts/check-compliance.mjs",
     "registry:prepare": "node scripts/prepare-registry.mjs",
     "rename": "node scripts/rename-project.mjs",
-    "version:set": "node scripts/set-version.mjs"
+    "version:set": "node scripts/set-version.mjs",
+    "manifest:sync": "node scripts/sync-manifest.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.13.0",
