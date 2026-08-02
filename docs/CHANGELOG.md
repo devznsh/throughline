@@ -31,6 +31,13 @@ Initial release.
 
 ### Fixed
 
+- An index that could not be opened killed the server permanently. Because the
+  failure happened during startup, before any tool could run, the user saw only
+  "the server disconnected" with no way to recover short of finding and deleting
+  a hidden directory. The index is a cache — everything in it can be rebuilt — so
+  an unopenable one is now discarded and rebuilt, and if the directory itself is
+  unusable the connector starts in memory and says so, rather than vanishing.
+
 - The bundle self-test crashed the packer *after* a successful handshake. It
   killed the child process and immediately removed the temporary workspace, but
   on Windows SQLite holds `-shm` and `-wal` handles until the process has really

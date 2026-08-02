@@ -1,4 +1,4 @@
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { ConnectorConfig } from './config/schema.js';
 import { resolveDatabasePath } from './config/load.js';
@@ -61,11 +61,53 @@ export async function createContainer(
       // every tool can answer "no workspace is granted" — which is a far better
       // failure than refusing to boot.
       const databasePath = grant.isEmpty ? ':memory:' : resolveDatabasePath(config);
-      const driver = openDatabase({ filePath: databasePath, logger });
-      const created = new SqliteIndexStore(driver, logger, version);
-      await created.initialize();
-      logger.debug('Index ready.', { path: path.basename(databasePath), driver: driver.kind });
-      return created;
+
+      const open = async (filePath: string): Promise<IndexStore> => {
+        const driver = openDatabase({ filePath, logger });
+        const created = new SqliteIndexStore(driver, logger, version);
+        await created.initialize();
+        logger.debug('Index ready.', { path: path.basename(filePath), driver: driver.kind });
+        return created;
+      };
+
+      try {
+        return await open(databasePath);
+      } catch (error: unknown) {
+        // The index is a cache: everything in it can be rebuilt by re-scanning.
+        // Letting a bad one be fatal means a single interrupted write, a
+        // half-synced file from a cloud-storage folder, or a schema left behind
+        // by an older build makes the connector permanently unusable — the user
+        // sees only "the server disconnected", with no way to recover short of
+        // finding and deleting a hidden directory. Discarding it is strictly
+        // better than dying.
+        if (databasePath === ':memory:') throw error;
+
+        logger.warn('The index could not be opened, so it is being rebuilt from scratch.', {
+          path: databasePath,
+          reason: error instanceof Error ? error.message : String(error),
+        });
+
+        for (const suffix of ['', '-wal', '-shm']) {
+          await rm(`${databasePath}${suffix}`, { force: true }).catch(() => {
+            // Best effort: if a stale sidecar cannot be removed, opening below
+            // will fail again and fall through to the in-memory path.
+          });
+        }
+
+        try {
+          return await open(databasePath);
+        } catch (retryError: unknown) {
+          // Still unusable — most often the directory is read-only or locked by
+          // another process. Start in memory so every tool can explain the
+          // problem rather than the server vanishing without a word.
+          logger.error('The index is unusable; running in memory for this session.', {
+            path: databasePath,
+            reason: retryError instanceof Error ? retryError.message : String(retryError),
+            remedy: 'Check the directory is writable and not synced by cloud storage, then restart.',
+          });
+          return open(':memory:');
+        }
+      }
     })());
 
   const vcsFor =

@@ -74,6 +74,18 @@ connector pointing at `node /absolute/path/dist/main.js --root /path/to/project`
 
 ## Troubleshooting
 
+### The extension disconnects immediately after working once
+
+Almost always the index in `<your project>/.throughline/` cannot be reopened.
+Recent builds discard and rebuild it automatically; on an older build, delete
+that directory and restart Claude Desktop.
+
+The usual cause is cloud-sync software. OneDrive, Dropbox and iCloud Drive all
+lock, replace or partially materialise files while syncing, and a SQLite
+database is exactly the kind of file that suffers. If your project lives in a
+synced folder, either exclude `.throughline` from syncing or move the project
+somewhere local such as `C:\dev\`.
+
 **"No workspace has been granted"** — no directory was chosen at install.
 Settings → Extensions → Throughline → set Project directories.
 
